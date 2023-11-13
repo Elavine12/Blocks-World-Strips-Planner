@@ -6,8 +6,9 @@ using System.Threading.Tasks;
 
 namespace Blocks_World_Strips_Planner
 {
-    class Word
+    class Predicate : Word
     {
-        string wordName;
+        public string actName;
+        public string blocks;
     }
 }
