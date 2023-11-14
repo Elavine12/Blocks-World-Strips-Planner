@@ -8,6 +8,12 @@ namespace Blocks_World_Strips_Planner
 {
     class Word
     {
-        string wordName;
+        public string actName;
+        public string blocks;
+
+        public string GetNameAndBlocks()
+        {
+            return null;
+        }
     }
 }

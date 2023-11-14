@@ -8,13 +8,9 @@ namespace Blocks_World_Strips_Planner
 {
     class Action : Word
     {
-        public string actName;
-        public string blocks;
-
         List<string> preList;
         List<string> addList;
         List<string> delList;
-
 
         public Action(string wordString)
         {

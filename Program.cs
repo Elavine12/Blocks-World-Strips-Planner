@@ -11,9 +11,9 @@ namespace Blocks_World_Strips_Planner
     {
         static List<Word> testClassList = new List<Word>(); 
 
-        static Stack<String> goalState = new Stack<String>();
-        static Stack<String> CurrState = new Stack<String>();
-        static Stack<String> startState = new Stack<String>();
+        static Stack<Word> goalStack = new Stack<Word>();
+        static Stack<Word> currentStack = new Stack<Word>();
+        static Stack<Word> startStack = new Stack<Word>();
         static string pathStart, pathGoal;
 
         static void Main(string[] args)
@@ -35,9 +35,28 @@ namespace Blocks_World_Strips_Planner
 
         static void StripsAlgorithm()
         {
-            while(goalState.Count != 0)
+            while(goalStack.Count != 0)
             {
-                if
+                /*
+                    Strips Alg Steps
+                    1. Check if GoalStack is empty on every loop
+                    2. Check if top item in GoalStack is a Predicate
+                        - If true, Check if Goal/Predicate is met in CurrStack
+                    3. Check if top item in GoalStack is an Action
+                        - If true, 
+                */
+                if(goalStack.Peek() is Predicate)
+                {
+                    foreach(Word stateWord in currentStack)
+                    {
+                        Predicate currStatePred = (Predicate)stateWord;
+                        
+                        if(currStatePred.actName == goalStack.Peek().actName && currStatePred.blocks == goalStack.Peek().blocks)
+                        {
+                            goalStack.Pop();
+                        }
+                    }
+                }
             }
         }
 
@@ -54,33 +73,31 @@ namespace Blocks_World_Strips_Planner
                 - Each string is then put into their corresponding list
                 - The Lists are then passed into a Stack constructor, converting them into Stacks
             */
-            startState = new Stack<string>(File.ReadAllLines(pathStart).ToList());
-            goalState = new Stack<string>(File.ReadAllLines(pathGoal).ToList());
+            List<string> startStateTempList = File.ReadAllLines(pathStart).ToList();
+            List<string> goalStateTempList = File.ReadAllLines(pathGoal).ToList();
+            startStack = new Stack<Word>();
+            goalStack = new Stack<Word>();
+            foreach(string line in startStateTempList)
+            {
+                Predicate wordPredicate = new Predicate(line);
+                startStack.Push(wordPredicate);
+            }
+            foreach(string line in goalStateTempList)
+            {
+                Predicate wordPredicate = new Predicate(line);
+                goalStack.Push(wordPredicate);
+            }
+
 
             //Test Words
-            Action anotherWord = new Action("PICKUP(A)");
-            testClassList.Add(anotherWord);
+            /*Action anotherWord = new Action("PICKUP(A)");
+            currStateStack.Add(anotherWord);
             anotherWord = new Action("STACK(A,B)");
-            testClassList.Add(anotherWord);
+            currStateStack.Add(anotherWord);
             anotherWord = new Action("UNSTACK(A,B)");
-            testClassList.Add(anotherWord);
+            currStateStack.Add(anotherWord);
             anotherWord = new Action("PUTDOWN(A)");
-            testClassList.Add(anotherWord);
-        }
-
-        static void PrintStates()
-        {
-            Console.WriteLine("Start State");
-            foreach (string line in startState)
-            {
-                Console.WriteLine(line);
-            }
-            Console.WriteLine();
-            Console.WriteLine("Goal State");
-            foreach (string line in goalState)
-            {
-                Console.WriteLine(line);
-            }
+            currStateStack.Add(anotherWord);*/
         }
 
         static void createAction(ref Action wordAction)
