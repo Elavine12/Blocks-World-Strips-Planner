@@ -17,7 +17,7 @@ namespace Blocks_World_Strips_Planner
                     gettingName = false;
                 if (gettingName)
                 {
-                    actName += character;
+                    wordName += character;
                 }
                 else
                 {

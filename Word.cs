@@ -8,12 +8,22 @@ namespace Blocks_World_Strips_Planner
 {
     class Word
     {
-        public string actName;
+        public string wordName;
         public string blocks;
 
-        public string GetNameAndBlocks()
+        public string wordString
         {
-            return null;
+            get 
+            { 
+                if(blocks.Count() > 1)
+                {
+                    return wordName+'(' + blocks[0] + ',' + blocks[1] + ')'; 
+                }
+                else
+                {
+                    return wordName + '(' + blocks[0] + ')';
+                }
+            }
         }
     }
 }

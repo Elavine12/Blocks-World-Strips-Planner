@@ -12,7 +12,7 @@ namespace Blocks_World_Strips_Planner
         static List<Word> testClassList = new List<Word>(); 
 
         static Stack<Word> goalStack = new Stack<Word>();
-        static Stack<Word> currentStack = new Stack<Word>();
+        static Stack<Predicate> currentStack = new Stack<Predicate>();
         static Stack<Word> startStack = new Stack<Word>();
         static string pathStart, pathGoal;
 
@@ -24,7 +24,7 @@ namespace Blocks_World_Strips_Planner
             foreach(Word word in testClassList)
             {
                 Action act = (Action)word;
-                Console.WriteLine(act.actName + "(" + act.blocks + ")");
+                Console.WriteLine(act.wordName + "(" + act.blocks + ")");
                 Console.WriteLine();
                 createAction(ref act);
                 act.printLists();
@@ -47,14 +47,47 @@ namespace Blocks_World_Strips_Planner
                 */
                 if(goalStack.Peek() is Predicate)
                 {
-                    foreach(Word stateWord in currentStack)
+                    foreach(Predicate stateWord in currentStack)
                     {
-                        Predicate currStatePred = (Predicate)stateWord;
+                        Predicate currStatePred = stateWord;
                         
-                        if(currStatePred.actName == goalStack.Peek().actName && currStatePred.blocks == goalStack.Peek().blocks)
+                        if(currStatePred.wordName == goalStack.Peek().wordName && currStatePred.blocks == goalStack.Peek().blocks)
                         {
                             goalStack.Pop();
                         }
+                    }
+                }
+                if (goalStack.Peek() is Action)
+                {
+                    Action curAction = (Action)goalStack.Pop();
+                    bool preconditionsMet = false;
+                    Predicate curPredicate;
+                    List<string> actionPreList = curAction.GetPreList();
+
+                    foreach(String actionPrecondition in actionPreList)
+                    {
+                        //Iterate through all preconditions of current action
+                        bool found = false;
+                        foreach(Predicate currentStatePedicate in currentStack)
+                        {
+                            //Check them against every predicate in currentStack to see if they all are met
+                            if(actionPrecondition == currentStatePedicate.wordString)
+                            {
+                                found = true;
+                            }
+                        }
+                        if(!found)
+                        {
+                            preconditionsMet = false;
+                            break;
+                        }
+                        
+                    }
+
+                    foreach (String stringPredicate in actionPreList)
+                    {
+                        curPredicate = new Predicate(stringPredicate);
+                        goalStack.Push(curPredicate);
                     }
                 }
             }
@@ -108,7 +141,7 @@ namespace Blocks_World_Strips_Planner
                 blockY = wordAction.blocks[1];
             }
 
-            switch(wordAction.actName)
+            switch(wordAction.wordName)
             {
                 case "STACK":
                     wordAction.addPre(String.Format("CLEAR({0})", blockY));

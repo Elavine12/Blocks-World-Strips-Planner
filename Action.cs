@@ -21,7 +21,7 @@ namespace Blocks_World_Strips_Planner
                     gettingName = false;
                 if(gettingName)
                 {
-                    actName += character;
+                    wordName += character;
                 }
                 else
                 {
@@ -32,6 +32,25 @@ namespace Blocks_World_Strips_Planner
             preList = new List<string>();
             addList = new List<string>();
             delList = new List<string>();
+        }
+
+        public List<string> GetPreList()
+        {
+            List<string> preListHolder = new List<string>();
+            preListHolder = preList.ToList();
+            return preListHolder;
+        }
+        public List<string> GetAddList()
+        {
+            List<string> addListHolder = new List<string>();
+            addListHolder = addList.ToList();
+            return addListHolder;
+        }
+        public List<string> GetDelList()
+        {
+            List<string> delListHolder = new List<string>();
+            delListHolder = delList.ToList();
+            return delListHolder;
         }
 
         public void printLists()
