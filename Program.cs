@@ -12,14 +12,15 @@ namespace Blocks_World_Strips_Planner
         static List<Word> testClassList = new List<Word>(); 
 
         static Stack<Word> goalStack = new Stack<Word>();
-        static Stack<Predicate> currentStack = new Stack<Predicate>();
-        static Stack<Word> startStack = new Stack<Word>();
+        static List<Predicate> currentStack = new List<Predicate>();
+        static List<Word> startStack = new List<Word>();
         static string pathStart, pathGoal;
 
         static void Main(string[] args)
         {
             CreateData();
             //PrintStates();
+
 
             foreach(Word word in testClassList)
             {
@@ -43,84 +44,86 @@ namespace Blocks_World_Strips_Planner
                     2. Check if top item in GoalStack is a Predicate
                         - If true, Check if Goal/Predicate is met in CurrStack
                     3. Check if top item in GoalStack is an Action
-                        - If true, 
+                        - If true, remove delList items from currentStack
+                        - Then push addList to currentStack
                 */
                 if(goalStack.Peek() is Predicate)
                 {
-                    foreach(Predicate stateWord in currentStack)
+                    bool goalFound = false;
+                    foreach(Predicate currStatePred in currentStack)
                     {
-                        Predicate currStatePred = stateWord;
-                        
-                        if(currStatePred.wordName == goalStack.Peek().wordName && currStatePred.blocks == goalStack.Peek().blocks)
+                        if(currStatePred.wordString == goalStack.Peek().wordString)
                         {
                             goalStack.Pop();
+                            goalFound = true;
+                            break;
                         }
+                    }
+                    if (goalFound)
+                        continue;
+                    else
+                    {
+                        //Top Goal in Goal Stack is not met
+                        //  - Find action that makes it true
+                        //  - Push action to Goal stack
+                        //  - Then push Preconditions
                     }
                 }
                 if (goalStack.Peek() is Action)
                 {
                     Action curAction = (Action)goalStack.Pop();
-                    bool preconditionsMet = false;
-                    Predicate curPredicate;
-                    List<string> actionPreList = curAction.GetPreList();
+                    List<string> curActionAddList = curAction.GetAddList();
+                    List<string> curActionDelList = curAction.GetDelList();
 
-                    foreach(String actionPrecondition in actionPreList)
+                    //Remove the predicates in the actions delList
+                    foreach (string delPredicate in curActionDelList)
                     {
-                        //Iterate through all preconditions of current action
-                        bool found = false;
-                        foreach(Predicate currentStatePedicate in currentStack)
+                        for (int i = 0; i < currentStack.Count(); i++)
                         {
-                            //Check them against every predicate in currentStack to see if they all are met
-                            if(actionPrecondition == currentStatePedicate.wordString)
+                            if (currentStack[i].wordString == delPredicate)
                             {
-                                found = true;
+                                currentStack.RemoveAt(i);
                             }
                         }
-                        if(!found)
-                        {
-                            preconditionsMet = false;
-                            break;
-                        }
-                        
                     }
-
-                    foreach (String stringPredicate in actionPreList)
+                    //Add Predicates in the actions addList to goalStack
+                    foreach (string addPredicate in curActionAddList)
                     {
-                        curPredicate = new Predicate(stringPredicate);
-                        goalStack.Push(curPredicate);
+                        currentStack.Add(new Predicate(addPredicate));
                     }
                 }
             }
         }
 
+        //ALREADY COMPLETED GOALS GO TO BOTTOM OF GOAL STACK || IMPLEMENT THIS
         static void CreateData()
         {
             //Start state and Goal state file paths
-            pathStart = @"C:\Users\sykes\OneDrive\Desktop\CodingProjects\Blocks World Strips Planner\StartState.txt";
-            pathGoal = @"C:\Users\sykes\OneDrive\Desktop\CodingProjects\Blocks World Strips Planner\GoalState.txt";
+            pathStart = @"StartState.txt";
+            pathGoal = @"GoalState.txt";
+
 
             /*
                 Creating Stacks
                 - Read Lines of Start and Goal files
                 - Turn each line into string
                 - Each string is then put into their corresponding list
-                - The Lists are then passed into a Stack constructor, converting them into Stacks
             */
             List<string> startStateTempList = File.ReadAllLines(pathStart).ToList();
             List<string> goalStateTempList = File.ReadAllLines(pathGoal).ToList();
-            startStack = new Stack<Word>();
+            startStack = new List<Word>();
             goalStack = new Stack<Word>();
+             
             foreach(string line in startStateTempList)
             {
                 Predicate wordPredicate = new Predicate(line);
-                startStack.Push(wordPredicate);
+                startStack.Add(wordPredicate);
             }
             foreach(string line in goalStateTempList)
             {
                 Predicate wordPredicate = new Predicate(line);
                 goalStack.Push(wordPredicate);
             }
-
 
             //Test Words
             /*Action anotherWord = new Action("PICKUP(A)");
@@ -192,3 +195,23 @@ namespace Blocks_World_Strips_Planner
 
     }
 }
+
+
+/*foreach(String actionPrecondition in actionPreList)
+                    {
+                        //Iterate through all preconditions of current action
+                        bool found = false;
+                        foreach(Predicate currentStatePedicate in currentStack)
+                        {
+                            //Check them against every predicate in currentStack to see if they all are met
+                            if(actionPrecondition == currentStatePedicate.wordString)
+                            {
+                                found = true;
+                            }
+                        }
+                        if(!found)
+                        {
+                            preconditionsMet = false;
+                            break;
+                        }
+                    }*/

@@ -17,7 +17,7 @@ namespace Blocks_World_Strips_Planner
             { 
                 if(blocks.Count() > 1)
                 {
-                    return wordName+'(' + blocks[0] + ',' + blocks[1] + ')'; 
+                    return wordName+'(' + blocks[0] + ',' + blocks[1] + ')';
                 }
                 else
                 {
