@@ -1,0 +1,5 @@
+ONTABLE(B)
+ON(A,B)
+ON(C,A)
+CLEAR(C)
+ARMEMPTY()
