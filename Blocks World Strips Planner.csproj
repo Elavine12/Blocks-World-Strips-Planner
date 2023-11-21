@@ -53,8 +53,12 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="GoalState.txt" />
-    <Content Include="StartState.txt" />
+    <Content Include="strips_input\G_1.txt" />
+    <Content Include="strips_input\G_2.txt" />
+    <Content Include="strips_input\G_3.txt" />
+    <Content Include="strips_input\S_1.txt" />
+    <Content Include="strips_input\S_2.txt" />
+    <Content Include="strips_input\S_3.txt" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

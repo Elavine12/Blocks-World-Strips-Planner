@@ -54,9 +54,16 @@ namespace Blocks_World_Strips_Planner
 
         static void Main(string[] args)
         {
-            //  Retrieve data from the start and goal files.
-            //  Input "1", "2", or "3" for Ex. 1, 2, or 3, respectively.f
-            CreateData("2");
+            //  Ask the user for input until they provide valid start and goal state files.
+            string input;
+            do
+            {
+                Console.WriteLine("Which data would you like to load?\nEnter 1, 2, or 3, or type the indicator for your files." +
+                    "\nFor example, \"input5\" would reference the files S_input5 and G_input5 as start and goal states.\nThese files should be in the 'strips_input' directory: ");
+                input = Console.ReadLine();
+            } while (!CreateData(input));
+
+            Console.WriteLine();
 
             //  Print Start Stack
             Console.WriteLine("Start Stack:");
@@ -419,14 +426,20 @@ namespace Blocks_World_Strips_Planner
         //  CreateData() reads data from the start and goal state
         //      files and places it into the startStack and goalStack
         //      as predicate objects.
-        static void CreateData(string append)
+        static bool CreateData(string append)
         {
             //  Start state and Goal state file paths
             string curr_dir = Path.GetFileName(System.IO.Directory.GetCurrentDirectory());
-            string prepend = curr_dir == "Debug" ? @"..\..\" : "";
-            pathStart = string.Concat(prepend, @"StartState", append, ".txt");
-            pathGoal = string.Concat(prepend, @"GoalState", append, ".txt");
-            
+            string prepend = curr_dir == "Debug" ? @"..\..\strips_input\" : "";
+            pathStart = String.Format("{0}S_{1}.txt", prepend, append);
+            pathGoal = String.Format("{0}G_{1}.txt", prepend, append);
+
+            if(!File.Exists(pathStart) || !File.Exists(pathGoal))
+            {
+                Console.WriteLine(String.Format("\nFiles ({0})\nand/or ({1}) do not exist.\n", pathStart, pathGoal));
+                return false;
+            }
+
             /*
                 Creating Stacks
                 - Read Lines of Start and Goal files
@@ -450,6 +463,7 @@ namespace Blocks_World_Strips_Planner
                 Predicate wordPredicate = new Predicate(line);
                 goalStack.Push(wordPredicate);
             }
+            return true;
         }
 
         //  createAction(actionObj) turns a word object cast as
