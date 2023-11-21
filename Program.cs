@@ -7,6 +7,14 @@ using System.IO;
 using System.Runtime.InteropServices;
 using System.Xml;
 
+/*
+    Desc: This file implements a class called Blocks_World_Strips_Planner that allows users to enter a current state and goal state in a world of blocks movable by a robot arm.
+            This concept is useful for applications in robotics, where specific actions are difficult to encode rather than by predicates (concise descriptions of the state of the world around the robot)
+            and changes in those predicates.
+    On:   11/10/23 to 11/20/23
+    By:   Evan Sykes and Larry Emerson Johnson
+ */
+
 namespace Blocks_World_Strips_Planner
 {
     class Blocks_World_Strips_Planner
@@ -62,21 +70,7 @@ namespace Blocks_World_Strips_Planner
             Console.WriteLine("Goal Stack:");
             foreach (Word word in goalStack)
             {
-                if (word is Predicate)
-                {
-                    Console.WriteLine(word.wordName + "(" + word.blocks + ")");
-                }
-                /*
-                else if (word is Word)
-                {
-                    Action act = (Action)word;
-                    Console.WriteLine(act.wordName + "(" + act.blocks + ")");
-                    Console.WriteLine();
-                    CreateAction(ref act);
-                    act.printLists();
-                    Console.WriteLine("------------------------------------------------------------------");
-                }
-                */
+                Console.WriteLine(word.wordName + "(" + word.blocks + ")");
             }
             Console.WriteLine();
            
@@ -84,7 +78,7 @@ namespace Blocks_World_Strips_Planner
             StripsAlgorithm();
 
             //  Print The solution created by the algorithm
-            Console.WriteLine("Solution:");
+            Console.WriteLine("Solution:\n");
             foreach(Action act in returnStack)
             {
                 Console.WriteLine(act.wordString);
@@ -94,6 +88,17 @@ namespace Blocks_World_Strips_Planner
             Console.ReadKey();
         }
 
+        /*
+                    Strips Alg Steps
+                    1. Check if GoalStack is empty on every loop
+                    2. Check if top item in GoalStack is a Predicate
+                        - If true, Check if Goal/Predicate is met in CurrStack
+                        - If not, find a way to satisfy this predicate
+                    3. Check if top item in GoalStack is an Action
+                       if so, this means we pushed it.
+                        - If true, remove delList items from currentStack
+                        - Then push addList to currentStack
+        */
         static void StripsAlgorithm()
         {
             #region REGION: Reorganizing Goal Stack
@@ -104,6 +109,8 @@ namespace Blocks_World_Strips_Planner
             //  For each word that exists in both goal stack and start stack
             //      Initializing new stack so as to not terminate iteration
             //      prematurely.
+            Console.WriteLine("Preprocessing input goal predicates.\n");
+
             foreach (Predicate pred in new Stack<Word>(goalStack.Reverse()))
             {
                 bool found = false;
@@ -111,7 +118,7 @@ namespace Blocks_World_Strips_Planner
                 {
                     if (word.wordString != pred.wordString) continue;
                     //  Remove from goal and push to bottom of temp stack
-                    Console.WriteLine(word.wordString + " being moved.");
+                    Console.WriteLine(word.wordString + " is already satisfied, moving to bottom of stack.");
                     temp_goal_stack.Push(goalStack.Pop());
                     found = true;
                 }
@@ -135,12 +142,18 @@ namespace Blocks_World_Strips_Planner
 
             //  Reinitialize the goal stack as a sorted stack.
             goalStack = new Stack<Word>(temp_goal_stack.Reverse());
+            Console.WriteLine();
             #endregion
 
-            bool notLastTime = false;
+            bool lowPriorityFlag = false;
+            int iter = 1;
             while(goalStack.Count != 0)
-            //while (go)
             {
+                //  Print the current goal stack and current stack
+                Console.WriteLine(String.Format("--------------- Operation {0} ---------------\n", iter));
+                iter++;
+
+                Console.WriteLine("Goal Stack:");
                 foreach (Word word in goalStack)
                 {
                     Console.WriteLine(word.wordName + "(" + word.blocks + ")");
@@ -153,42 +166,36 @@ namespace Blocks_World_Strips_Planner
                 }
                 Console.WriteLine();
 
-                /*
-                    Strips Alg Steps
-                    1. Check if GoalStack is empty on every loop
-                    2. Check if top item in GoalStack is a Predicate
-                        - If true, Check if Goal/Predicate is met in CurrStack
-                        - If not, find a way to satisfy this predicate
-                    3. Check if top item in GoalStack is an Action
-                       if so, this means we pushed it.
-                        - If true, remove delList items from currentStack
-                        - Then push addList to currentStack
-                */
+                //  Predicate Parsing
                 if (goalStack.Peek() is Predicate)
                 {
+                    //  Determine the current working predicate
                     Predicate curr_pred = (Predicate)goalStack.Peek();
                     Console.WriteLine("Current Predicate: " + curr_pred.wordString + "\n");
-                    //  Iterate through all items in the current
-                    //      stack to see if the goal predicate is
-                    //      met, if so, continue to next iteration
+                    
+                    //  Iterate through all items in the current stack to see if the goal predicate is met, if so, continue to next iteration.
                     bool goalFound = false;
                     foreach (Predicate currStatePred in currStack)
                     {
                         if (currStatePred.wordString == curr_pred.wordString)
                         {
+                            Console.WriteLine("Predicate found in current stack.\nPopping from goal stack...\n");
                             goalStack.Pop();
                             goalFound = true;
                             break;
                         }
                     }
+                    //  If the top goal predicate was successfully completed, continue to next predicate in the stack until empty.
                     if (goalFound)
                     {
                         continue;
                     }
-                    
-                    //  Otherwise, find an action to satisfy this predicate
+                   
+                //  Action Creation
+                    //  Otherwise, the predicate on top of the goal stack, find an action to satisfy this predicate.
                     else
                     {
+                        Console.WriteLine("Predicate not found in current stack.\nDetermining action to resolve predicate.\n");
                         //  Define possible blocks
                         List<char> block_lets = new List<char>() { 'A', 'B', 'C' };
                         
@@ -211,12 +218,15 @@ namespace Blocks_World_Strips_Planner
                                         {
                                             if (curr_pred.wordName == "ARMEMPTY" && c != block_in_arms) continue;
                                             if (c == c_other) continue;
+                                            //  Create an action based on the format of the STACK action, and pass it to the list of all possible actions
                                             Action temp1 = new Action(String.Format("STACK({0},{1})", c, c_other));
                                             CreateAction(ref temp1);
                                             actionList.Add(temp1);
                                         }
                                     }
                                     break;
+                                //  Unstack action -- Should not occur when trying to empty the arm.
+                                //                    Otherwise, should only occur in reference to "ON" predicates in the current state.
                                 case "UNSTACK":
                                     foreach(Predicate pred in currStack)
                                     {
@@ -227,6 +237,7 @@ namespace Blocks_World_Strips_Planner
                                         actionList.Add(temp2);
                                     }
                                     break;
+                                //  Pick up action -- Should not occur when trying to put a box down
                                 case "PICKUP":
                                     foreach (Predicate pred in currStack)
                                     {
@@ -236,10 +247,12 @@ namespace Blocks_World_Strips_Planner
                                         actionList.Add(temp3);
                                     }
                                     break;
+                                //  Put down action -- A low priority action that can cause loops, and thus is generally only possible after all other options fail.
+                                //                     Otherwise, it can occur with normal priority if the robot arm is currently holding a box.
                                 case "PUTDOWN":
                                     bool arm_empty = true;
                                     
-                                    if(notLastTime)
+                                    if(lowPriorityFlag)
                                     {
                                         foreach(char c in block_lets)
                                         {
@@ -265,19 +278,20 @@ namespace Blocks_World_Strips_Planner
                                     break;
                             }
                         }
+
+                        //  Print the action list.
+                        Console.WriteLine("All possible actions:");
                         foreach (Action a in actionList)
                         {
                             Console.WriteLine(a.wordString);
                         }
+                        Console.WriteLine();
 
+                        //  Action Selection
                         bool good_break = false;
                         //  For each action in possible actions
                         foreach (Action act in actionList)
                         {
-                            Console.WriteLine("Current Possible Action:\n" + act.wordString);
-                            //act.printLists();
-                            Console.WriteLine();
-
                             //  Test if its add list satisfies the predicate
                             bool satisfies = false;
                             foreach(string pred_string in act.GetAddList())
@@ -288,7 +302,7 @@ namespace Blocks_World_Strips_Planner
                             }
                             if (!satisfies) continue;
 
-                            Console.WriteLine("Pushing Action...\n");
+                            Console.WriteLine(String.Format("Resolving Action found.\nPushing Action {0} to the goal stack.\n", act.wordString));
 
                             //  push it to goal stack
                             goalStack.Pop();
@@ -299,13 +313,15 @@ namespace Blocks_World_Strips_Planner
                             {
                                 goalStack.Push(new Predicate(pred_string));
                             }
-                            notLastTime = false;
+                            lowPriorityFlag = false;
                             good_break = true;
                             break;
                         }
+                        //  If no action was taken, set the low priority flag to allow for the PUTDOWN action to be selected.
                         if (!good_break)
                         {
-                            notLastTime = true;
+                            Console.WriteLine("No action found.\nSetting low priority flag to find resolution on next search.\n");
+                            lowPriorityFlag = true;
                         }
 
                         //Top Goal in Goal Stack is not met
@@ -314,6 +330,7 @@ namespace Blocks_World_Strips_Planner
                         //  - Then push Preconditions
                     }
                 }
+                    //  Action Application
                 //  If the next item on the goal stack is an action:
                 if (goalStack.Peek() is Action)
                 {
@@ -356,15 +373,18 @@ namespace Blocks_World_Strips_Planner
                     //  to the goal stack and exit processing this action.
                     if(!satisfied)
                     {
-                        Console.WriteLine("Not Satisfied:");
+                        Console.WriteLine("The following prerequisites are no longer satisfied.\nThese will be pushed to the goal stack and resolved:");
+                        
                         foreach (Predicate pred in not_satisfied)
                         {
                             Console.WriteLine(pred.wordString);
                             goalStack.Push(pred);
                         }
+                        Console.WriteLine();
                         continue;
                     }
 
+                    Console.WriteLine("Processing Action...\n");
                     //  Remove the action that was just completed from the goal stack
                     goalStack.Pop();
 
@@ -393,6 +413,7 @@ namespace Blocks_World_Strips_Planner
                     returnStack.Add(curAction);
                 }
             }
+            Console.WriteLine("----------- Operation Completed ------------\n");
         }
 
         //  CreateData() reads data from the start and goal state
@@ -400,11 +421,12 @@ namespace Blocks_World_Strips_Planner
         //      as predicate objects.
         static void CreateData(string append)
         {
-            //Start state and Goal state file paths
+            //  Start state and Goal state file paths
             string curr_dir = Path.GetFileName(System.IO.Directory.GetCurrentDirectory());
             string prepend = curr_dir == "Debug" ? @"..\..\" : "";
             pathStart = string.Concat(prepend, @"StartState", append, ".txt");
             pathGoal = string.Concat(prepend, @"GoalState", append, ".txt");
+            
             /*
                 Creating Stacks
                 - Read Lines of Start and Goal files
@@ -419,27 +441,15 @@ namespace Blocks_World_Strips_Planner
              
             foreach(string line in startStateTempList)
             {
-                //Console.WriteLine("Looping in 1");
                 Predicate wordPredicate = new Predicate(line);
                 startStack.Add(wordPredicate);
                 currStack.Add(wordPredicate);
             }
             foreach(string line in goalStateTempList)
             {
-                //Console.WriteLine("Looping in 2");
                 Predicate wordPredicate = new Predicate(line);
                 goalStack.Push(wordPredicate);
             }
-
-            //Test Words
-            /*Action anotherWord = new Action("PICKUP(A)");
-            currStateStack.Add(anotherWord);
-            anotherWord = new Action("STACK(A,B)");
-            currStateStack.Add(anotherWord);
-            anotherWord = new Action("UNSTACK(A,B)");
-            currStateStack.Add(anotherWord);
-            anotherWord = new Action("PUTDOWN(A)");
-            currStateStack.Add(anotherWord);*/
         }
 
         //  createAction(actionObj) turns a word object cast as
@@ -447,6 +457,7 @@ namespace Blocks_World_Strips_Planner
         //      predicate additions, and predicate subtractions.
         static void CreateAction(ref Action wordAction)
         {
+            //  If there is only one block affected by this action, do not try to parse a block that doesn't exist. This would cause an IndexError.
             char blockY = ' ', blockX = wordAction.blocks[0];
             if(wordAction.blocks.Length > 1)
             {
@@ -455,6 +466,9 @@ namespace Blocks_World_Strips_Planner
 
             switch(wordAction.wordName)
             {
+                //  STACK:  Must be holding the box, and the box to place it on must be clear.
+                //          The arm is now empty, block X is not on block Y, and block X is now clear.
+                //          Block Y is no longer clear, the arm is no longer holding block X, and block X is no longer on the table.
                 case "STACK":
                     wordAction.addPre(String.Format("HOLDING({0})", blockX));
                     wordAction.addPre(String.Format("CLEAR({0})", blockY));
@@ -463,10 +477,14 @@ namespace Blocks_World_Strips_Planner
                     wordAction.addAdd(String.Format("ON({0},{1})", blockX, blockY));
                     wordAction.addAdd(String.Format("CLEAR({0})", blockX));
 
-                    wordAction.addDel(String.Format("CLEAR({0})", blockY));
                     wordAction.addDel(String.Format("HOLDING({0})", blockX));
+                    wordAction.addDel(String.Format("CLEAR({0})", blockY));
                     wordAction.addDel(String.Format("ONTABLE({0})", blockX));
                     break;
+
+                //  UNSTACK:    Block X must be on block Y, block X must be clear, and the arm must be empty.
+                //              The arm is now holding block X, and block Y is now clear.
+                //              Block X is no longer on block Y, block X is no longer clear (it is being held), and the arm is no longer empty.
                 case "UNSTACK":
                     wordAction.addPre(String.Format("ON({0},{1})", blockX, blockY));
                     wordAction.addPre(String.Format("CLEAR({0})", blockX));
@@ -479,6 +497,10 @@ namespace Blocks_World_Strips_Planner
                     wordAction.addDel(String.Format("CLEAR({0})", blockX));
                     wordAction.addDel("ARMEMPTY()");
                     break;
+
+                //  PICKUP: Block X must be on the table, it must be clear, and the arm must be empty.
+                //          The arm is now holding block X
+                //          Block X is no longer on the table, it is no longer clear (it is being held), and the arm is no longer empty.
                 case "PICKUP":
                     wordAction.addPre(String.Format("ONTABLE({0})", blockX));
                     wordAction.addPre(String.Format("CLEAR({0})", blockX));
@@ -490,6 +512,10 @@ namespace Blocks_World_Strips_Planner
                     wordAction.addDel(String.Format("CLEAR({0})", blockX));
                     wordAction.addDel("ARMEMPTY()");
                     break;
+
+                //  PUTDOWN:    The arm must be holding block X.
+                //              Block X is now on the table, it is clear for other objects to be placed on it, and the arm is empty.
+                //              The arm is no longer holding block X.
                 case "PUTDOWN":
                     wordAction.addPre(String.Format("HOLDING({0})", blockX));
 
@@ -503,23 +529,3 @@ namespace Blocks_World_Strips_Planner
         }
     }
 }
-
-
-/*foreach(String actionPrecondition in actionPreList)
-                    {
-                        //Iterate through all preconditions of current action
-                        bool found = false;
-                        foreach(Predicate currentStatePedicate in currentStack)
-                        {
-                            //Check them against every predicate in currentStack to see if they all are met
-                            if(actionPrecondition == currentStatePedicate.wordString)
-                            {
-                                found = true;
-                            }
-                        }
-                        if(!found)
-                        {
-                            preconditionsMet = false;
-                            break;
-                        }
-                    }*/
