@@ -58,8 +58,8 @@ namespace Blocks_World_Strips_Planner
             string input;
             do
             {
-                Console.WriteLine("Which data would you like to load?\nEnter 1, 2, or 3, or type the indicator for your files." +
-                    "\nFor example, \"input5\" would reference the files S_input5 and G_input5 as start and goal states.\nThese files should be in the 'strips_input' directory: ");
+                Console.WriteLine("Which data would you like to load?\nEnter one of the following premade example files: \"1\", \"2\", or \"3\" -- or type the indicator for your files." +
+                    "\nFor example, \"input5\" would reference the files \"S_input5\" and \"G_input5\" as start and goal states.\nThese files should be in the 'strips_input' directory: ");
                 input = Console.ReadLine();
             } while (!CreateData(input));
 
